@@ -104,20 +104,21 @@ export const Label: FC<LabelProps> = ({
     });
 
     return (
-        <group>
-            {
-                background && (
-                    <RoundedBox args={[Math.max(textSize.x + (textSize.x * 0.075), 8), Math.max(textSize.y + (textSize.y * 0.075), 8), -0.1]}
-                        rotation={rotation}
-                        radius={2.05}
-                        smoothness={4}
-                        position={[0, 0.5, 0]}>
-                        <meshLambertMaterial attach="material" color={normalizedBackground} />
-                    </RoundedBox>
-                )
-            }
-            <Billboard position={[0, 0, 1]}>
-
+        <Billboard position={[0, 0, 1]}>
+            <group>
+                {
+                    background && (
+                        <RoundedBox
+                            args={[Math.max(textSize.x + (textSize.x * 0.075), 8), Math.max(textSize.y + (textSize.y * 0.085), 8), 0]}
+                            rotation={rotation}
+                            radius={2.05}
+                            smoothness={4}
+                            position={[0, 0, 0]}
+                        >
+                            <meshLambertMaterial attach="material" color={normalizedBackground} />
+                        </RoundedBox>
+                    )
+                }
                 <Text
                     ref={textRef}
                     font={fontUrl}
@@ -134,9 +135,9 @@ export const Label: FC<LabelProps> = ({
                 >
                     {shortText}
                 </Text>
+            </group>
+        </Billboard>
 
-            </Billboard>
-        </group>
     );
 };
 
