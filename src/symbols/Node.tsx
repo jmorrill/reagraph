@@ -25,6 +25,7 @@ import { useDrag } from '../utils/useDrag';
 import { Icon } from './nodes';
 import { useHoverIntent } from '../utils/useHoverIntent';
 import { ThreeEvent } from '@react-three/fiber';
+import { getNodeThemeNumber } from 'themes';
 
 export interface NodeProps {
   /**
@@ -312,6 +313,8 @@ export const Node: FC<NodeProps> = ({
           <a.group position={labelPosition as any}>
             <Label
               text={label}
+              background={theme.node.label.background}
+              fontSize={getNodeThemeNumber(theme.node.label.fontSize, node)}
               fontUrl={labelFontUrl}
               opacity={selectionOpacity}
               stroke={theme.node.label.stroke}

@@ -19,6 +19,7 @@ import { Html, useCursor } from 'glodrei';
 import { useHoverIntent } from '../utils/useHoverIntent';
 import { Euler, Vector3 } from 'three';
 import { ThreeEvent } from '@react-three/fiber';
+import { getEdgeThemeColor, getEdgeThemeNumber } from 'themes';
 
 /**
  * Label positions relatively edge.
@@ -137,7 +138,7 @@ export const Edge: FC<EdgeProps> = ({
   const to = useStore(store => store.nodes.find(node => node.id === target));
 
   // Edge properties
-  const labelOffset = (size + theme.edge.label.fontSize) / 2;
+  const labelOffset = (size + getEdgeThemeNumber(theme.edge.label.fontSize, edge)) / 2;
   const [arrowLength, arrowSize] = useMemo(() => getArrowSize(size), [size]);
   const { curveOffset, curved } = useMemo(
     () =>
@@ -278,7 +279,7 @@ export const Edge: FC<EdgeProps> = ({
           color={
             isSelected || active || isActive
               ? theme.arrow.activeFill
-              : theme.arrow.fill
+              : getEdgeThemeColor(theme.arrow.fill, edge)
           }
           length={arrowLength}
           opacity={selectionOpacity}
@@ -329,12 +330,13 @@ export const Edge: FC<EdgeProps> = ({
                 : theme.edge.label.color
             }
             opacity={selectionOpacity}
-            fontSize={theme.edge.label.fontSize}
+            fontSize={getEdgeThemeNumber(theme.edge.label.fontSize, edge)}
             rotation={labelRotation}
           />
         </a.group>
       ),
     [
+      edge,
       active,
       isActive,
       isSelected,
@@ -370,7 +372,7 @@ export const Edge: FC<EdgeProps> = ({
         color={
           isSelected || active || isActive
             ? theme.edge.activeFill
-            : theme.edge.fill
+            : getEdgeThemeColor(theme.edge.fill, edge)
         }
         curve={curve}
         curved={curved}

@@ -4,7 +4,7 @@ import { Html } from 'glodrei';
 import { ColorRepresentation, Euler } from 'three';
 
 import { useStore } from '../../store';
-import { Theme } from '../../themes';
+import { getEdgeThemeNumber, Theme } from '../../themes';
 import { ContextMenuEvent, InternalGraphEdge } from '../../types';
 import {
   animationConfig,
@@ -84,7 +84,7 @@ export const Edge: FC<EdgeProps> = ({
   const to = nodes.find(node => node.id === target);
   const draggingId = useStore(state => state.draggingId);
 
-  const labelOffset = (size + theme.edge.label.fontSize) / 2;
+  const labelOffset = (size + getEdgeThemeNumber(theme.edge.label.fontSize, edge)) / 2;
 
   const midPoint = useMemo(
     () =>
@@ -155,7 +155,7 @@ export const Edge: FC<EdgeProps> = ({
             stroke={theme.edge.label.stroke}
             color={color}
             opacity={opacity}
-            fontSize={theme.edge.label.fontSize}
+            fontSize={getEdgeThemeNumber(theme.edge.label.fontSize, edge)}
             rotation={labelRotation}
           />
         </a.group>

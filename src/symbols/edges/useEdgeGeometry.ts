@@ -19,6 +19,7 @@ import {
 } from '../../utils';
 import { EdgeArrowPosition } from '../Arrow';
 import { EdgeInterpolation } from '../Edge';
+import { getEdgeThemeNumber } from 'themes';
 
 export type UseEdgeGeometry = {
   getGeometries(edges: Array<InternalGraphEdge>): Array<BufferGeometry>;
@@ -72,9 +73,9 @@ export function useEdgeGeometry(
         }
 
         const fromVector = getVector(from);
-        const fromOffset = from.size + theme.edge.label.fontSize;
+        const fromOffset = from.size + getEdgeThemeNumber(theme.edge.label.fontSize, edge);
         const toVector = getVector(to);
-        const toOffset = to.size + theme.edge.label.fontSize;
+        const toOffset = to.size + getEdgeThemeNumber(theme.edge.label.fontSize, edge);
         let curve = getCurve(
           fromVector,
           fromOffset,

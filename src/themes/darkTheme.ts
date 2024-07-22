@@ -13,7 +13,8 @@ export const darkTheme: Theme = {
     label: {
       stroke: '#1E2026',
       color: '#ACBAC7',
-      activeColor: '#1DE9AC'
+      activeColor: '#1DE9AC',
+      background: "#222222"
     },
     subLabel: {
       stroke: '#1E2026',
