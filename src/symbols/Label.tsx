@@ -113,7 +113,7 @@ export const Label: FC<LabelProps> = ({
                             rotation={rotation}
                             radius={2.05}
                             smoothness={4}
-                            position={[0, 0, 0]}
+                            position={[0, 0.5, 0]}
                         >
                             <meshLambertMaterial attach="material" color={normalizedBackground} />
                         </RoundedBox>
@@ -126,7 +126,7 @@ export const Label: FC<LabelProps> = ({
                     color={normalizedColor}
                     fillOpacity={opacity}
                     textAlign="center"
-                    outlineWidth={stroke ? 1 : 0}
+                    outlineWidth={stroke ? 0.5 : 0}
                     outlineColor={normalizedStroke}
                     depthOffset={0}
                     maxWidth={100}
