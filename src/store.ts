@@ -17,7 +17,7 @@ import {
 } from './utils';
 import { isServerRender } from './utils/visibility';
 import Graph from 'graphology';
-import { Theme } from './themes';
+import { getEdgeThemeNumber, Theme } from './themes';
 
 export type DragReferences = {
   [key: string]: InternalGraphNode;
@@ -75,7 +75,7 @@ export const createStore = ({
         ...theme?.edge,
         label: {
           ...theme?.edge?.label,
-          fontSize: theme?.edge?.label?.fontSize ?? 6
+          fontSize: getEdgeThemeNumber(theme?.edge?.label?.fontSize) ?? 6
         }
       }
     },

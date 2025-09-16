@@ -14,6 +14,7 @@ import {
   useEdgeOpacityAnimation
 } from './useEdgeAnimations';
 import { Edge } from './Edge';
+import { getEdgeThemeColor } from '../../themes';
 
 export type EdgesProps = {
   /**
@@ -262,7 +263,7 @@ export const Edges: FC<EdgesProps> = ({
       <mesh ref={dynamicEdgesRef}>
         <a.meshBasicMaterial
           attach="material-0"
-          color={theme.edge.fill}
+          color={getEdgeThemeColor(theme.edge.fill)}
           depthTest={false}
           fog={true}
           opacity={inactiveOpacity}

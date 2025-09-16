@@ -4,6 +4,7 @@ import { Html } from '@react-three/drei';
 import { ColorRepresentation, Euler } from 'three';
 
 import { useStore } from '../../store';
+import { getEdgeThemeNumber, Theme } from '../../themes';
 import { ContextMenuEvent, InternalGraphEdge } from '../../types';
 import {
   animationConfig,
@@ -95,8 +96,8 @@ export const Edge: FC<EdgeProps> = ({
   const isDragging = useStore(state => state.draggingIds.length > 0);
 
   const labelOffset = useMemo(
-    () => (size + theme.edge.label.fontSize) / 2,
-    [size, theme.edge.label.fontSize]
+    () => (size + getEdgeThemeNumber(theme.edge.label.fontSize, edge)) / 2,
+    [size, theme.edge.label.fontSize, edge]
   );
 
   const midPoint = useMemo(
@@ -175,7 +176,7 @@ export const Edge: FC<EdgeProps> = ({
       stroke: theme.edge.label.stroke,
       color,
       opacity,
-      fontSize: theme.edge.label.fontSize,
+      fontSize: getEdgeThemeNumber(theme.edge.label.fontSize, edge),
       rotation: labelRotation,
       active
     }),
@@ -187,7 +188,8 @@ export const Edge: FC<EdgeProps> = ({
       opacity,
       theme.edge.label.fontSize,
       labelRotation,
-      active
+      active,
+      edge
     ]
   );
 

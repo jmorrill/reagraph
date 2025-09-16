@@ -25,6 +25,7 @@ import { useDrag } from '../utils/useDrag';
 import { useHoverIntent } from '../utils/useHoverIntent';
 import { Icon } from './nodes';
 import type { ThreeEvent } from '@react-three/fiber';
+import { getNodeThemeNumber } from '../themes';
 
 export interface NodeProps {
   /**
@@ -325,8 +326,10 @@ export const Node: FC<NodeProps> = ({
           <Label
             text={label}
             fontUrl={labelFontUrl}
+            fontSize={getNodeThemeNumber(theme.node.label.fontSize, node)}
             opacity={selectionOpacity}
             stroke={theme.node.label.stroke}
+            background={theme.node.label.background}
             backgroundColor={theme.node.label.backgroundColor}
             backgroundOpacity={theme.node.label.backgroundOpacity}
             padding={theme.node.label.padding}
@@ -372,14 +375,16 @@ export const Node: FC<NodeProps> = ({
       selectionOpacity,
       subLabel,
       theme.node.label.activeColor,
-      theme.node.label.color,
-      theme.node.label.stroke,
+      theme.node.label.background,
       theme.node.label.backgroundColor,
       theme.node.label.backgroundOpacity,
+      theme.node.label.color,
+      theme.node.label.fontSize,
       theme.node.label.padding,
+      theme.node.label.radius,
+      theme.node.label.stroke,
       theme.node.label.strokeColor,
       theme.node.label.strokeWidth,
-      theme.node.label.radius,
       theme.node.subLabel?.activeColor,
       theme.node.subLabel?.color,
       theme.node.subLabel?.stroke

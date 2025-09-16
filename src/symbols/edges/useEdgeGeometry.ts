@@ -24,6 +24,7 @@ import {
 } from '../../utils';
 import { EdgeArrowPosition } from '../Arrow';
 import { EdgeInterpolation } from '../Edge';
+import { getEdgeThemeColor, getEdgeThemeNumber } from '../../themes';
 
 export type UseEdgeGeometry = {
   getGeometries(edges: Array<InternalGraphEdge>): Array<BufferGeometry>;
@@ -99,9 +100,11 @@ export function useEdgeGeometry(
           return;
         }
         const fromVector = getVector(from);
-        const fromOffset = from.size;
+        const fromOffset =
+          from.size + getEdgeThemeNumber(theme.edge.label.fontSize, edge);
         const toVector = getVector(to);
-        const toOffset = to.size;
+        const toOffset =
+          to.size + getEdgeThemeNumber(theme.edge.label.fontSize, edge);
 
         let curve: Curve<Vector3>;
         if (isSelfLoop) {
@@ -121,7 +124,7 @@ export function useEdgeGeometry(
           edgeGeometry = createDashedGeometry(
             curve,
             radius,
-            new Color(edge.fill ?? theme.edge.fill),
+            new Color(getEdgeThemeColor(edge.fill ?? theme.edge.fill, edge)),
             edge.dashArray
           );
         } else {
@@ -131,7 +134,9 @@ export function useEdgeGeometry(
         if (edgeArrowPlacement === 'none') {
           // Add color to edge geometry for edges without arrows (only if not dashed, dashed already have colors)
           if (!isDashedEdge) {
-            const edgeOnlyColor = new Color(edge.fill ?? theme.edge.fill);
+            const edgeOnlyColor = new Color(
+              getEdgeThemeColor(edge.fill ?? theme.edge.fill, edge)
+            );
             addColorAttribute(edgeGeometry, edgeOnlyColor);
           }
 
@@ -192,7 +197,7 @@ export function useEdgeGeometry(
             edgeGeometry = createDashedGeometry(
               adjustedCurve,
               radius,
-              new Color(edge.fill ?? theme.edge.fill),
+              new Color(getEdgeThemeColor(edge.fill ?? theme.edge.fill, edge)),
               edge.dashArray
             );
           } else {
@@ -207,7 +212,9 @@ export function useEdgeGeometry(
         }
 
         // Add color attributes to both geometries (only for non-dashed, dashed already have colors)
-        const finalColor = new Color(edge.fill ?? theme.edge.fill);
+        const finalColor = new Color(
+          getEdgeThemeColor(edge.fill ?? theme.edge.fill, edge)
+        );
 
         if (!isDashedEdge) {
           addColorAttribute(edgeGeometry, finalColor);

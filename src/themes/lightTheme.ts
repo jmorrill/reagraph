@@ -8,7 +8,12 @@ export const lightTheme: Theme = {
     opacity: 1,
     selectedOpacity: 1,
     inactiveOpacity: 0.2,
-    label: { color: '#2A6475', stroke: '#fff', activeColor: '#1DE9AC' },
+    label: {
+      color: '#2A6475',
+      stroke: '#fff',
+      activeColor: '#1DE9AC',
+      background: '#CCCCCC'
+    },
     subLabel: { color: '#ddd', stroke: 'transparent', activeColor: '#1DE9AC' }
   },
   lasso: { border: '1px solid #55aaff', background: 'rgba(75, 160, 255, 0.1)' },

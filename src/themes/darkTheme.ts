@@ -8,7 +8,12 @@ export const darkTheme: Theme = {
     opacity: 1,
     selectedOpacity: 1,
     inactiveOpacity: 0.2,
-    label: { stroke: '#1E2026', color: '#ACBAC7', activeColor: '#1DE9AC' },
+    label: {
+      stroke: '#1E2026',
+      color: '#ACBAC7',
+      activeColor: '#1DE9AC',
+      background: '#222222'
+    },
     subLabel: { stroke: '#1E2026', color: '#ACBAC7', activeColor: '#1DE9AC' }
   },
   lasso: { border: '1px solid #55aaff', background: 'rgba(75, 160, 255, 0.1)' },

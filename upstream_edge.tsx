@@ -21,7 +21,6 @@ import { CatmullRomCurve3, Euler, Vector3 } from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
 import { calculateSubLabelOffset, getSelfLoopCurve } from '../utils/position';
 import { SelfLoop } from './edges/SelfLoop';
-import { getEdgeThemeColor, getEdgeThemeNumber } from '../themes';
 
 /**
  * Label positions relatively edge.
@@ -172,8 +171,7 @@ export const Edge: FC<EdgeProps> = ({
   const isSelfLoop = from.id === to.id;
 
   // Edge properties
-  const labelOffset =
-    (size + getEdgeThemeNumber(theme.edge.label.fontSize, edge)) / 2;
+  const labelOffset = (size + theme.edge.label.fontSize) / 2;
   const [arrowLength, arrowSize] = useMemo(() => getArrowSize(size), [size]);
 
   // Use edge-specific interpolation if available, otherwise use global interpolation
@@ -354,7 +352,7 @@ export const Edge: FC<EdgeProps> = ({
         color={
           isSelected || active || isActive
             ? theme.arrow.activeFill
-            : fill || getEdgeThemeColor(theme.arrow.fill, edge)
+            : fill || theme.arrow.fill
         }
         length={arrowLength}
         opacity={selectionOpacity}
@@ -417,7 +415,7 @@ export const Edge: FC<EdgeProps> = ({
                 : theme.edge.label.color
             }
             opacity={selectionOpacity}
-            fontSize={getEdgeThemeNumber(theme.edge.label.fontSize, edge)}
+            fontSize={theme.edge.label.fontSize}
             rotation={labelRotation}
             active={isSelected || active || isActive}
           />
@@ -439,7 +437,7 @@ export const Edge: FC<EdgeProps> = ({
                 opacity={selectionOpacity}
                 fontSize={
                   theme.edge.subLabel?.fontSize ||
-                  getEdgeThemeNumber(theme.edge.label.fontSize, edge) * 0.8
+                  theme.edge.label.fontSize * 0.8
                 }
                 rotation={labelRotation}
               />
@@ -497,7 +495,7 @@ export const Edge: FC<EdgeProps> = ({
           color={
             isSelected || active || isActive
               ? theme.edge.activeFill
-              : fill || getEdgeThemeColor(theme.edge.fill, edge)
+              : fill || theme.edge.fill
           }
           opacity={selectionOpacity}
           onClick={event => {
@@ -521,7 +519,7 @@ export const Edge: FC<EdgeProps> = ({
           color={
             isSelected || active || isActive
               ? theme.edge.activeFill
-              : fill || getEdgeThemeColor(theme.edge.fill, edge)
+              : fill || theme.edge.fill
           }
           curve={curve}
           curved={curved}

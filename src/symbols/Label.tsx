@@ -1,7 +1,8 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { Billboard, Text, RoundedBox } from '@react-three/drei';
-import { Color, ColorRepresentation, Euler } from 'three';
+import { Box3, Color, ColorRepresentation, Euler, Vector3 } from 'three';
 import ellipsize from 'ellipsize';
+import { useFrame } from '@react-three/fiber';
 
 export interface LabelProps {
   /**
@@ -79,6 +80,11 @@ export interface LabelProps {
    * Rotation of the label.
    */
   rotation?: Euler | [number, number, number];
+
+  /**
+   * Background color of the label (alias for backgroundColor).
+   */
+  background?: ColorRepresentation;
 }
 
 export const Label: FC<LabelProps> = ({
@@ -89,6 +95,7 @@ export const Label: FC<LabelProps> = ({
   opacity = 1,
   stroke,
   backgroundColor,
+  background,
   backgroundOpacity = 1,
   padding = 1,
   strokeColor,
@@ -104,10 +111,11 @@ export const Label: FC<LabelProps> = ({
     () => (stroke ? new Color(stroke) : undefined),
     [stroke]
   );
-  const normalizedBackgroundColor = useMemo(
-    () => (backgroundColor ? new Color(backgroundColor) : null),
-    [backgroundColor]
-  );
+  const normalizedBackgroundColor = useMemo(() => {
+    // Support both background and backgroundColor props (background takes precedence)
+    const bgColor = background || backgroundColor;
+    return bgColor ? new Color(bgColor) : null;
+  }, [background, backgroundColor]);
   const normalizedStrokeColor = useMemo(
     () => (strokeColor ? new Color(strokeColor) : null),
     [strokeColor]
