@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useMemo, useState, useEffect } from 'react';
 import { a, useSpring } from '@react-spring/three';
 import { TextureLoader, Color, LinearFilter, ShaderMaterial } from 'three';
 import { animationConfig } from '../../utils/animation';
@@ -78,12 +78,13 @@ export interface CircularImageProps extends NodeRendererProps {
   borderInnerRadius?: number | ((node: GraphNode) => number);
 }
 
-// Custom shader for circular masking
+// Custom shader for circular masking with aspect ratio preservation
 const circularShader = {
   uniforms: {
     map: { value: null },
     opacity: { value: 1.0 },
-    color: { value: new Color() }
+    color: { value: new Color() },
+    aspectRatio: { value: 1.0 } // width/height ratio of the image
   },
   vertexShader: `
     varying vec2 vUv;
@@ -96,6 +97,7 @@ const circularShader = {
     uniform sampler2D map;
     uniform float opacity;
     uniform vec3 color;
+    uniform float aspectRatio;
     varying vec2 vUv;
 
     void main() {
@@ -106,14 +108,27 @@ const circularShader = {
       // Create circular mask with smooth edges
       float mask = 1.0 - smoothstep(0.48, 0.5, dist);
 
-      // Adjust UV coordinates to better utilize image space
-      // Scale UV coordinates to use more of the texture
-      vec2 scaledUv = (vUv - 0.5) * 1.2 + 0.5;
+      // Adjust UV coordinates to maintain aspect ratio and fill the circle
+      vec2 adjustedUv = vUv - 0.5; // Center the coordinates
+
+      // Scale to maintain aspect ratio while filling the circle
+      if (aspectRatio > 1.0) {
+        // Image is wider than tall - fit height and crop width
+        adjustedUv.y *= 2.0; // Fill the full height
+        adjustedUv.x *= 2.0 / aspectRatio; // Scale width to maintain aspect ratio
+      } else {
+        // Image is taller than wide - fit width and crop height
+        adjustedUv.x *= 2.0; // Fill the full width
+        adjustedUv.y *= 2.0 * aspectRatio; // Scale height to maintain aspect ratio
+      }
+
+      // Recenter the coordinates
+      vec2 scaledUv = adjustedUv + 0.5;
 
       // Clamp to texture bounds to prevent sampling outside
       scaledUv = clamp(scaledUv, 0.0, 1.0);
 
-      // Sample texture with scaled coordinates
+      // Sample texture with aspect-ratio-corrected coordinates
       vec4 texColor = texture2D(map, scaledUv);
 
       // Use texture color if available, otherwise use base color
@@ -145,6 +160,8 @@ export const CircularImage: FC<CircularImageProps> = ({
   borderInnerRadius = 0.8,
   node
 }) => {
+  const [aspectRatio, setAspectRatio] = useState(1.0);
+
   const texture = useMemo(() => {
     const loader = new TextureLoader();
     const tex = loader.load(image);
@@ -153,20 +170,31 @@ export const CircularImage: FC<CircularImageProps> = ({
     return tex;
   }, [image]);
 
+  // Get image dimensions and calculate aspect ratio
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      setAspectRatio(ratio);
+    };
+    img.src = image;
+  }, [image]);
+
   const shaderMaterial = useMemo(() => {
     return new ShaderMaterial({
       uniforms: {
         ...circularShader.uniforms,
         map: { value: texture },
         opacity: { value: opacity },
-        color: { value: new Color(color) }
+        color: { value: new Color(color) },
+        aspectRatio: { value: aspectRatio }
       },
       vertexShader: circularShader.vertexShader,
       fragmentShader: circularShader.fragmentShader,
       transparent: true,
       fog: true
     });
-  }, [texture, opacity, color]);
+  }, [texture, opacity, color, aspectRatio]);
 
   // Resolve border values using callbacks and node data
   const resolvedBorderEnabled = useMemo(() => {
