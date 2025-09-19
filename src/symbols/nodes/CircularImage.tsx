@@ -271,7 +271,7 @@ export const CircularImage: FC<CircularImageProps> = ({
   return (
     <>
       <a.mesh userData={{ id, type: 'node' }} scale={scale as any}>
-        <planeGeometry attach="geometry" args={[1.8, 1.8]} />
+        <circleGeometry attach="geometry" args={[0.9, 64]} />
         <primitive attach="material" object={shaderMaterial} />
       </a.mesh>
 
@@ -283,6 +283,7 @@ export const CircularImage: FC<CircularImageProps> = ({
           color={resolvedBorderColor}
           opacity={resolvedBorderOpacity}
           strokeWidth={resolvedBorderThickness}
+          segments={64}
         />
       )}
 
@@ -294,6 +295,7 @@ export const CircularImage: FC<CircularImageProps> = ({
           color={selectionHighlightColor}
           strokeWidth={selectionBorderWidth}
           innerRadius={selectionRingInnerRadius}
+          segments={64}
         />
       </a.group>
     </>
