@@ -78,67 +78,25 @@ export interface CircularImageProps extends NodeRendererProps {
   borderInnerRadius?: number | ((node: GraphNode) => number);
 }
 
-// Custom shader for circular masking with aspect ratio preservation
-const circularShader = {
-  uniforms: {
-    map: { value: null },
-    opacity: { value: 1.0 },
-    color: { value: new Color() },
-    aspectRatio: { value: 1.0 } // width/height ratio of the image
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D map;
-    uniform float opacity;
-    uniform vec3 color;
-    uniform float aspectRatio;
-    varying vec2 vUv;
+// SVG placeholder for person icon
+const PERSON_PLACEHOLDER_SVG = `
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="8" r="4" fill="#CBD5E0"/>
+    <path d="M6 21c0-4 3-7 6-7s6 3 6 7" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+`;
 
-    void main() {
-      // Calculate distance from center
-      vec2 center = vec2(0.5, 0.5);
-      float dist = distance(vUv, center);
-
-      // Create circular mask with smooth edges
-      float mask = 1.0 - smoothstep(0.48, 0.5, dist);
-
-      // Adjust UV coordinates to maintain aspect ratio and fill the circle
-      vec2 adjustedUv = vUv - 0.5; // Center the coordinates
-
-      // Scale to maintain aspect ratio while filling the circle
-      if (aspectRatio > 1.0) {
-        // Image is wider than tall - fit height and crop width
-        adjustedUv.y *= 2.0; // Fill the full height
-        adjustedUv.x *= 2.0 / aspectRatio; // Scale width to maintain aspect ratio
-      } else {
-        // Image is taller than wide - fit width and crop height
-        adjustedUv.x *= 2.0; // Fill the full width
-        adjustedUv.y *= 2.0 * aspectRatio; // Scale height to maintain aspect ratio
-      }
-
-      // Recenter the coordinates
-      vec2 scaledUv = adjustedUv + 0.5;
-
-      // Clamp to texture bounds to prevent sampling outside
-      scaledUv = clamp(scaledUv, 0.0, 1.0);
-
-      // Sample texture with aspect-ratio-corrected coordinates
-      vec4 texColor = texture2D(map, scaledUv);
-
-      // Use texture color if available, otherwise use base color
-      vec3 finalColor = texColor.a > 0.0 ? texColor.rgb : color;
-
-      // Apply circular mask and overall opacity
-      gl_FragColor = vec4(finalColor, mask * opacity);
-    }
-  `
+// Convert SVG to data URL for texture
+const svgToDataUrl = (svg: string) => {
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
+
+interface ImageLoadState {
+  isLoading: boolean;
+  hasLoaded: boolean;
+  hasError: boolean;
+  aspectRatio: number;
+}
 
 export const CircularImage: FC<CircularImageProps> = ({
   image,
@@ -160,41 +118,162 @@ export const CircularImage: FC<CircularImageProps> = ({
   borderInnerRadius = 0.8,
   node
 }) => {
-  const [aspectRatio, setAspectRatio] = useState(1.0);
+  const [loadState, setLoadState] = useState<ImageLoadState>({
+    isLoading: true,
+    hasLoaded: false,
+    hasError: false,
+    aspectRatio: 1.0
+  });
 
-  const texture = useMemo(() => {
+  // Create placeholder texture
+  const placeholderTexture = useMemo(() => {
     const loader = new TextureLoader();
-    const tex = loader.load(image);
+    const tex = loader.load(svgToDataUrl(PERSON_PLACEHOLDER_SVG));
     tex.minFilter = LinearFilter;
     tex.magFilter = LinearFilter;
     return tex;
-  }, [image]);
+  }, []);
 
-  // Get image dimensions and calculate aspect ratio
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      const ratio = img.naturalWidth / img.naturalHeight;
-      setAspectRatio(ratio);
-    };
-    img.src = image;
-  }, [image]);
+  // Create main image texture (loads asynchronously)
+  const imageTexture = useMemo(() => {
+    if (!image) return placeholderTexture;
 
+    setLoadState(prev => ({
+      ...prev,
+      isLoading: true,
+      hasLoaded: false,
+      hasError: false
+    }));
+
+    const loader = new TextureLoader();
+    const tex = loader.load(
+      image,
+      // onLoad
+      () => {
+        // Get aspect ratio from the actual image
+        const img = new Image();
+        img.onload = () => {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          setLoadState({
+            isLoading: false,
+            hasLoaded: true,
+            hasError: false,
+            aspectRatio: ratio
+          });
+        };
+        img.src = image;
+      },
+      // onProgress
+      undefined,
+      // onError
+      () => {
+        setLoadState(prev => ({
+          ...prev,
+          isLoading: false,
+          hasError: true
+        }));
+      }
+    );
+
+    tex.minFilter = LinearFilter;
+    tex.magFilter = LinearFilter;
+    return tex;
+  }, [image, placeholderTexture]);
+
+  // Create shader material that handles both placeholder and actual image
   const shaderMaterial = useMemo(() => {
+    const currentTexture = loadState.hasLoaded
+      ? imageTexture
+      : placeholderTexture;
+    const currentAspectRatio = loadState.hasLoaded
+      ? loadState.aspectRatio
+      : 1.0;
+
     return new ShaderMaterial({
       uniforms: {
-        ...circularShader.uniforms,
-        map: { value: texture },
+        map: { value: currentTexture },
         opacity: { value: opacity },
         color: { value: new Color(color) },
-        aspectRatio: { value: aspectRatio }
+        aspectRatio: { value: currentAspectRatio },
+        isPlaceholder: { value: !loadState.hasLoaded ? 1.0 : 0.0 }
       },
-      vertexShader: circularShader.vertexShader,
-      fragmentShader: circularShader.fragmentShader,
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D map;
+        uniform float opacity;
+        uniform vec3 color;
+        uniform float aspectRatio;
+        uniform float isPlaceholder;
+        varying vec2 vUv;
+
+        void main() {
+          // Calculate distance from center for circular mask
+          vec2 center = vec2(0.5, 0.5);
+          float dist = distance(vUv, center);
+
+          // Create circular mask with smooth edges
+          float mask = 1.0 - smoothstep(0.48, 0.5, dist);
+
+          // Center UV coordinates
+          vec2 uv = vUv - 0.5;
+
+          if (isPlaceholder > 0.5) {
+            // For placeholder: simple centered scaling
+            uv *= 0.6; // Scale down placeholder icon
+          } else {
+            // For actual image: aspect-ratio-aware scaling to fill circle
+            if (aspectRatio > 1.0) {
+              // Wide image: scale to fill height, crop width
+              uv.x /= aspectRatio;
+            } else if (aspectRatio < 1.0) {
+              // Tall image: scale to fill width, crop height
+              uv.y *= aspectRatio;
+            }
+            // Scale to fill circle completely
+            uv *= 0.95;
+          }
+
+          // Recenter
+          uv += 0.5;
+
+          // Clamp to prevent sampling outside texture
+          uv = clamp(uv, 0.0, 1.0);
+
+          // Sample texture
+          vec4 texColor = texture2D(map, uv);
+
+          // For placeholder, blend with background color
+          if (isPlaceholder > 0.5) {
+            vec3 bgColor = vec3(0.95, 0.95, 0.95); // Light gray background
+            texColor.rgb = mix(bgColor, texColor.rgb, texColor.a);
+          }
+
+          // Use texture color if available, otherwise base color
+          vec3 finalColor = texColor.a > 0.0 ? texColor.rgb : color;
+
+          gl_FragColor = vec4(finalColor, mask * opacity);
+        }
+      `,
       transparent: true,
       fog: true
     });
-  }, [texture, opacity, color, aspectRatio]);
+  }, [imageTexture, placeholderTexture, opacity, color, loadState]);
+
+  // Smooth transition animation when image loads
+  const { imageOpacity, placeholderOpacity } = useSpring({
+    imageOpacity: loadState.hasLoaded ? 1.0 : 0.0,
+    placeholderOpacity: loadState.hasLoaded ? 0.0 : 1.0,
+    config: {
+      tension: 200,
+      friction: 25
+    }
+  });
 
   // Resolve border values using callbacks and node data
   const resolvedBorderEnabled = useMemo(() => {
@@ -274,6 +353,19 @@ export const CircularImage: FC<CircularImageProps> = ({
         <circleGeometry attach="geometry" args={[0.9, 64]} />
         <primitive attach="material" object={shaderMaterial} />
       </a.mesh>
+
+      {/* Loading indicator */}
+      {loadState.isLoading && (
+        <a.mesh position={[0, 0, 0.1]} scale={[0.3, 0.3, 1]}>
+          <ringGeometry attach="geometry" args={[0.8, 1.0, 8]} />
+          <a.meshBasicMaterial
+            attach="material"
+            color="#4299e1"
+            transparent={true}
+            opacity={0.6}
+          />
+        </a.mesh>
+      )}
 
       {/* Custom Border Ring */}
       {resolvedBorderEnabled && (
